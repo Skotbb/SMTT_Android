@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">SMTT Casco Bay Lines</string>
-    <string name="title_activity_maps">Map</string>
+    <string name="title_activity_maps">SMTT</string>
+    <string name="action_schedule">Schedule</string>
+    <string name="action_map">Map</string>
 
     <string name="marker_title">Fort Gorges</string>
 </resources>
