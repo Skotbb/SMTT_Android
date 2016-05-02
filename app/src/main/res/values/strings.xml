@@ -5,4 +5,5 @@
     <string name="action_map">Map</string>
 
     <string name="marker_title">Fort Gorges</string>
+    <string name="title_activity_model_testing">See the Log messages...that is all this does!</string>
 </resources>
