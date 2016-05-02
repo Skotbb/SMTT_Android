@@ -3,6 +3,8 @@ package edu.smccme.vgreen.smttcascobaylines;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.graphics.AvoidXfermode;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,6 +18,7 @@ import org.json.JSONObject;
 import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -209,10 +212,95 @@ public class ModelManager {
         notifyVehicleListeners();
     }
 
+    // ********************************************
+    // GPS and Location Helpers
+
+    private MyLocationManager mMyLocationManager;
+
+    private class MyLocationManager{
+        private Location mMyLocation;
+        private Port mMyPort;
+
+        private PortManager mPortManager;
+
+        private MyLocationManager(Location loc){
+            mPortManager = PortManager.getInstance();
+
+            mMyLocation = new Location(loc);
+            mMyPort = getMyPort();
+        }
+
+        private Location getMyLocation() {
+            return mMyLocation;
+        }
+
+        private void setMyLocation(Location myLocation) {
+            mMyLocation = myLocation;
+        }
+
+        private Port getMyPort() {
+            float diff=0,
+                    closest=0;
+            List<Port> portList = mPortManager.getPorts();
+            Port port, closestPort;
+            Location loc;
+
+            loc = new Location("default");
+            port = portList.get(0);
+            loc.setLatitude(port.getPortLat());
+            loc.setLongitude(port.getPortLon());
+            diff = mMyLocation.distanceTo(loc);
+            closest = diff;
+            closestPort = port;
+
+            for(int i = 1; i < portList.size(); i++){
+                //Check distance to all ports
+                port = portList.get(i);
+                loc.setLatitude(port.getPortLat());
+                loc.setLongitude(port.getPortLon());
+                diff = mMyLocation.distanceTo(loc);
+                //Check if it's closer than the last
+                if(diff < closest){
+                    closest = diff;
+                    closestPort = port;
+                }
+            }
+            return closestPort;
+        }
+
+    }
+
+    public MyLocationManager createMyLocationManager(Location loc){
+        if(mMyLocationManager == null){
+            mMyLocationManager = new MyLocationManager(loc);
+
+            return mMyLocationManager;
+        }
+        return mMyLocationManager;
+    }
 
 
+    public Location getMyLocation() {
+        if(mMyLocationManager != null){
+            return mMyLocationManager.getMyLocation();
+        }
 
+        return null;
+    }
 
+    public void setMyLocation(Location newLoc){
+        if(mMyLocationManager != null){
+            mMyLocationManager.setMyLocation(newLoc);
+        }
+    }
+
+    public Port getMyPort(){
+        if(mMyLocationManager != null){
+            return mMyLocationManager.getMyPort();
+        }
+
+        return null;
+    }
 
 
     // ******************************************

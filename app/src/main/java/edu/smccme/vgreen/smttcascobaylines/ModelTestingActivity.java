@@ -28,7 +28,6 @@ public class ModelTestingActivity extends AppCompatActivity implements ModelMana
 
         // register for vehicle updates
         mMgr.registerVehicleListener(this);
-
         // test the stops, route shapes, and a specific set of trips
         mMgr.startQueryForResult(this, 1234567, ModelManager.QueryType.STOPS, null);
         mMgr.startQueryForResult(this, 99999999, ModelManager.QueryType.ROUTE_SHAPES, null);
