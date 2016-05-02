@@ -270,13 +270,10 @@ public class ModelManager {
 
     }
 
-    public MyLocationManager createMyLocationManager(Location loc){
+    public void createMyLocationManager(Location loc){
         if(mMyLocationManager == null){
             mMyLocationManager = new MyLocationManager(loc);
-
-            return mMyLocationManager;
         }
-        return mMyLocationManager;
     }
 
 

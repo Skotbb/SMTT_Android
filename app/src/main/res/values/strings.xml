@@ -6,4 +6,5 @@
 
     <string name="marker_title">Fort Gorges</string>
     <string name="title_activity_model_testing">See the Log messages...that is all this does!</string>
+    <string name="GPS_no_loc_avail">No Location Available</string>
 </resources>
