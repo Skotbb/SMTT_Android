@@ -9,6 +9,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -28,6 +29,7 @@ implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFail
 
     protected Location mMyLocation;
     protected Port mMyPort;
+    protected PortManager mMyPortManager;
 
     protected ModelManager mMgr;
 
@@ -35,18 +37,30 @@ implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFail
     private int mUpdateInterval = 30 * 1000;
     private int mFastestUpdateInterval = 10 * 1000;
 
+    //Test TextView to check Location
+    private TextView mClosestPortTV;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_filter);
 
+        //Get the instance of ModelManager
         mMgr = ModelManager.getInstance(this);
+        //Get the instance of PortManager, giving access to the list of ports.
+        mMyPortManager = PortManager.getInstance();
+
         setClient();
+
+        //Initialize Widgets.
+        mClosestPortTV = (TextView) findViewById(R.id.closest_port_TV);
     }
 
-
-
-
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mClient.connect();
+    }
 
     protected void setClient(){
         mClient = new GoogleApiClient.Builder(this)
@@ -61,6 +75,10 @@ implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFail
         mLocationRequest.setInterval(mUpdateInterval);
         mLocationRequest.setFastestInterval(mFastestUpdateInterval);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    }
+
+    protected void updateForLocation(){
+        mClosestPortTV.setText(mMyPort.getFullLabel());
     }
 
     @Override
@@ -79,6 +97,8 @@ implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFail
         if(mMyLocation != null) {
             mMgr.createMyLocationManager(mMyLocation);
             mMyPort = mMgr.getMyPort();
+            //Test TextView for checking Location
+            updateForLocation();
         }else{
             Toast.makeText(this, R.string.GPS_no_loc_avail, Toast.LENGTH_SHORT).show();
         }
@@ -90,8 +110,14 @@ implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFail
     }
 
     @Override
-    public void onConnectionSuspended(int i) {
+    protected void onStop() {
+        super.onStop();
+        mClient.disconnect();
+    }
 
+    @Override
+    public void onConnectionSuspended(int i) {
+        Toast.makeText(this, R.string.GPS_no_serv, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -99,10 +125,12 @@ implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFail
         mMyLocation = location;
         mMgr.setMyLocation(location);
         mMyPort = mMgr.getMyPort();
+        //Test TextView for checking coordinates
+        updateForLocation();
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
+        Toast.makeText(this, R.string.GPS_cannot_con, Toast.LENGTH_SHORT).show();
     }
 }

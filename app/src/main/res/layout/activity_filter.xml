@@ -11,4 +11,27 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="edu.smccme.vgreen.smttcascobaylines.FilterActivity">
 
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/GPS_closest_port_label"
+            android:id="@+id/closest_port_label"
+            android:layout_weight="1"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="New Text"
+            android:id="@+id/closest_port_TV"
+            android:layout_weight="1"/>
+
+    </LinearLayout>
+
 </LinearLayout>
