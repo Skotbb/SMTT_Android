@@ -37,6 +37,7 @@
             android:name=".ModelTestingActivity"
             android:label="@string/title_activity_model_testing" />
         <activity android:name=".FilterActivity">
+            // cute the intent filter and paste it into the activity that you want to start
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
