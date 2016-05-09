@@ -10,6 +10,7 @@ import android.widget.TextView;
 public class SingleScheduleLayout extends RelativeLayout{
 
     Port m_port;
+    FerryTrip.FerryStop m_ferry;
     // not sure if i need it or not, just incase
     Context m_context;
     TextView m_portId;
@@ -39,6 +40,7 @@ public class SingleScheduleLayout extends RelativeLayout{
         m_port = port;
         m_portId.setText(m_port.getPortId());
         m_destination.setText(m_port.getFullLabel());
+        m_time.setText(m_ferry.getDepartureTime());
 
         // the port class does not have the time?
 
