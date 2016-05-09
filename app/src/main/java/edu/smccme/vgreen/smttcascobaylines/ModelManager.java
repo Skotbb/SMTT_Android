@@ -15,6 +15,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Array;
 import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -145,6 +146,7 @@ public class ModelManager {
 
 
 
+
     // this should really be bundled into the QueryListener above,
     // but to make Jeremy's life easier, it will automatically update here instead.
 
@@ -194,7 +196,10 @@ public class ModelManager {
 
 
     // VehicleListener notification
-    private void notifyVehicleListeners() {
+    // Sochenda: changed the method from private to protected
+    // to notify listeners if the vehicles update from the adapter
+
+    protected void notifyVehicleListeners() {
         // I had an idea that it is important to give each listener a copy of the array,
         // not a reference, but now I can't remember why.
         Iterator<VehicleListener> it = m_vListeners.iterator();
