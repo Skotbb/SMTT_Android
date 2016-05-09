@@ -78,7 +78,9 @@ implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFail
     }
 
     protected void updateForLocation(){
-        mClosestPortTV.setText(mMyPort.getFullLabel());
+        if(mMyPort != null) {
+            mClosestPortTV.setText(mMyPort.getFullLabel());
+        }
     }
 
     @Override
