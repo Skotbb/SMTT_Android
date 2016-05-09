@@ -14,7 +14,7 @@
     <string name="title_activity_single_schedule_layout">SingleScheduleLayout</string>
 
     <string name="destination_label">Destination</string>
-    <string name="port_id_label">Port</string>
+    <string name="port_id_label">Port Number</string>
     <string name="time_label">Time</string>
     <string name="title_activity_schedule">ScheduleActivity</string>
 

@@ -16,7 +16,7 @@
         android:orientation="horizontal"
         android:layout_width="182dp"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="20sp">
+        android:layout_marginLeft="25sp">
 
         <TextView
             android:layout_width="wrap_content"
@@ -29,6 +29,6 @@
             android:layout_height="wrap_content"
             android:text="@string/time_label"
             android:id="@+id/time_textView"
-            android:layout_marginLeft="50sp" />
+            android:layout_marginLeft="70sp" />
     </LinearLayout>
 </LinearLayout>

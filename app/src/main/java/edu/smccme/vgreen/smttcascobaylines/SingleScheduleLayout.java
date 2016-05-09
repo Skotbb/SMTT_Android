@@ -42,8 +42,6 @@ public class SingleScheduleLayout extends RelativeLayout{
         m_destination.setText(m_port.getFullLabel());
         m_time.setText(m_ferry.getDepartureTime());
 
-        // the port class does not have the time?
-
 
     }
 }
