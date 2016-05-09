@@ -4,7 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/smtt-casco-bay-lines.iml" filepath="$PROJECT_DIR$/smtt-casco-bay-lines.iml" />
-      <module fileurl="file://$PROJECT_DIR$/smtt_casco_bay_lines.iml" filepath="$PROJECT_DIR$/smtt_casco_bay_lines.iml" />
+      <module fileurl="file://$PROJECT_DIR$/smtt-casco-bay-lines.iml" filepath="$PROJECT_DIR$/smtt-casco-bay-lines.iml" />
     </modules>
   </component>
 </project>

@@ -11,7 +11,6 @@ public class SingleScheduleLayout extends RelativeLayout{
 
     Port m_port;
     FerryTrip.FerryStop m_ferry;
-    // not sure if i need it or not, just incase
     Context m_context;
     TextView m_portId;
     TextView m_destination;
