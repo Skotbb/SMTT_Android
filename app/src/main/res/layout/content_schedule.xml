@@ -17,6 +17,6 @@
         android:layout_height="match_parent"
         android:id="@+id/schedule_action"
         android:name="edu.smccme.vgreen.smttcascobaylines.ScheduleView"
-        />
+        tools:layout="@layout/fragment_schedule_view"/>
 
 </LinearLayout>

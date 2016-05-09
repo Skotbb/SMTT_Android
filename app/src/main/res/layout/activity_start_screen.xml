@@ -11,6 +11,32 @@
     tools:context="edu.smccme.vgreen.smttcascobaylines.StartScreen"
     android:background="@mipmap/banner_arrivaltimes_left">
 
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|bottom">
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/find_filters_label"
+            android:id="@+id/startSched_button"
+            />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/label_transit_tracker"
+            android:id="@+id/transitTracker_label"
+            android:layout_gravity="center_horizontal|bottom"
+            android:textColor="#ffffff"
+            android:textSize="42dp"
+            android:background="#702d6a"
+            android:gravity="center_horizontal"/>
+
+    </LinearLayout>
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -20,28 +46,6 @@
         android:textColor="#ffffff"
         android:textSize="42dp"
         android:gravity="center_horizontal"
-        android:textColorHighlight="#692867"/>
+        android:background="#702d6a"/>
 
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal|bottom">
-
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/find_filters_label"
-            android:id="@+id/startSched_button"
-            android:layout_gravity="center_horizontal|bottom"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/label_transit_tracker"
-            android:id="@+id/transitTracker_label"
-            android:layout_gravity="center_horizontal|bottom"
-            android:textColor="#ffffff"
-            android:textSize="42dp"/>
-    </LinearLayout>
 </FrameLayout>
