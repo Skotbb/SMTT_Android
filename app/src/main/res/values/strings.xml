@@ -6,6 +6,9 @@
 
     <string name="marker_title">Fort Gorges</string>
     <string name="title_activity_model_testing">See the Log messages...that is all this does!</string>
+    <string name="label_southern_maine">Southern Maine</string>
+    <string name="label_transit_tracker">Transit Tracker</string>
+    <string name="find_filters_label">Find Schedules -></string>
 
     <string name="GPS_no_loc_avail">No Location Available</string>
     <string name="GPS_cannot_con">Cannot Connect</string>
