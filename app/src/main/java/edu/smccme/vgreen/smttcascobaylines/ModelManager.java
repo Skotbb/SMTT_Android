@@ -426,18 +426,20 @@ public class ModelManager {
                             routeValues += m_routes.get(i).getId() + ",";
                         }
                         // trim trailing comma (may not be important)
+                        // also don't do anything if the feed is down (no routes for Casco Bay Lines)
                         if (routeValues.length() > 0) {
                             routeValues = routeValues.substring(0, routeValues.length() - 1);
+
+
+                            String vehicleJSON = fio.downloadFile(VEHICLES_QUERY + routeValues);
+
+                            ArrayList<VehicleInfo> parsedVehicles = jsonToVehicles(vehicleJSON);
+
+                            // put this on the UI thread to update the ModelManager
+                            VehicleUpdateRunnable vRun = new VehicleUpdateRunnable(parsedVehicles);
+                            Handler h = new Handler(Looper.getMainLooper());
+                            h.post(vRun);
                         }
-
-                        String vehicleJSON = fio.downloadFile(VEHICLES_QUERY + routeValues);
-
-                        ArrayList<VehicleInfo> parsedVehicles = jsonToVehicles(vehicleJSON);
-
-                        // put this on the UI thread to update the ModelManager
-                        VehicleUpdateRunnable vRun = new VehicleUpdateRunnable(parsedVehicles);
-                        Handler h = new Handler(Looper.getMainLooper());
-                        h.post(vRun);
 
                     } catch (ConnectException e) {
                         Log.d(ModelManager.class.toString(), e.getMessage());
