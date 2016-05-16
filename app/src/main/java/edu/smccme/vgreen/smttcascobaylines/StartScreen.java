@@ -20,7 +20,7 @@ public class StartScreen extends AppCompatActivity {
         mStartSchedules.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(v.getContext(), FilterActivity.class);
+                Intent intent = new Intent(v.getContext(), MapsActivity.class);
 
                 startActivity(intent);
             }

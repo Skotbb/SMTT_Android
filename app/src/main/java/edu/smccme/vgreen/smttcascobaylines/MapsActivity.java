@@ -1,5 +1,6 @@
 package edu.smccme.vgreen.smttcascobaylines;
 
+import android.graphics.Color;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -13,14 +14,19 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
 public class MapsActivity extends AppCompatActivity
         implements OnMapReadyCallback, ModelManager.VehicleListener, ModelManager.QueryListener {
@@ -28,8 +34,12 @@ public class MapsActivity extends AppCompatActivity
     private GoogleMap m_map;
     private ModelManager m_mgr;
     private ArrayList<Marker> m_ferryMarkers;
+    private ArrayList<VehicleInfo> m_activeFerries;
+    private HashMap<Integer, FerryTrip> m_ferryTrips;
 
     private static final int STOPS_REQUEST_ID = 1234567; // whatever
+    private static final int SHAPES_REQUEST_ID = 8675309; //Jenny, I got your number
+    private static final int TRIPS_REQUEST_ID = 1011;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,12 +52,15 @@ public class MapsActivity extends AppCompatActivity
 
         m_mgr = ModelManager.getInstance(getApplicationContext());
         m_ferryMarkers = new ArrayList<>();
+        m_activeFerries = new ArrayList<>();
+        m_ferryTrips = new HashMap<>();
     }
 
     @Override
     protected void onDestroy() {
         // clear the markers to prevent a memory leak
         m_ferryMarkers.clear();
+        m_map.clear();
         super.onDestroy();
     }
 
@@ -69,17 +82,42 @@ public class MapsActivity extends AppCompatActivity
         //  move the camera
         LatLng fortGorges = new LatLng(43.662498, -70.221609);
 
+        //Set all the ports to be included in the Map Bounds
+        PortManager mPorts = PortManager.getInstance();
+        List<Port> mPortList = new ArrayList<>();
+        mPortList = mPorts.getPorts();
+        //Build LatLng objects from ports
+        List<LatLng> mPortLatLng = new ArrayList<>();
+        for(Port port : mPortList){
+            LatLng  portLoc = new LatLng(port.getPortLat(),port.getPortLon());
+            mPortLatLng.add(portLoc);
+        }
+
+        LatLngBounds mMapBounds =
+        LatLngBounds.builder().
+                include(mPortLatLng.get(0))
+                .include(mPortLatLng.get(1))
+                .include(mPortLatLng.get(2))
+                .include(mPortLatLng.get(3))
+                .include(mPortLatLng.get(4))
+                .include(mPortLatLng.get(5))
+                .include(mPortLatLng.get(6))
+                .include(mPortLatLng.get(7))
+                .include(mPortLatLng.get(8))
+                .build();
+
         // various CameraUpdate objects control the camera
         // see:
         // https://developers.google.com/maps/documentation/android-api/views
-        m_map.moveCamera(CameraUpdateFactory.newLatLngZoom(fortGorges, 12.0f));
-
+        m_map.moveCamera(CameraUpdateFactory.newLatLngBounds(mMapBounds, 50));
 
         // get the ports from the model
         m_mgr.startQueryForResult(this, STOPS_REQUEST_ID, ModelManager.QueryType.STOPS, null);
 
         // register to get vehicle updates.
         m_mgr.registerVehicleListener(this);
+
+        getTripsInProgress();
     }
 
 
@@ -135,7 +173,58 @@ public class MapsActivity extends AppCompatActivity
                 } catch (JSONException e) {
                     Log.d(MapsActivity.class.toString(), e.getMessage());
                 }
-            }
+            }//Query for STOPS
+            if(requestCode == TRIPS_REQUEST_ID){
+                Log.d(MapsActivity.class.toString(), "TRIPS json :" + jsonResult);
+
+                try {
+                    JSONArray tripsArray = new JSONArray(jsonResult);
+                    if(!m_activeFerries.isEmpty()) {
+                        for (int i = 0; i < tripsArray.length(); i++) {
+                            JSONObject obj = tripsArray.getJSONObject(i);
+                            int tripId = Integer.parseInt(obj.getString("trip_id"));
+                            for(int j=0; j<m_activeFerries.size(); j++){ //For each Ferry
+                                //Check if its trip matches TripOBJ
+                                if(m_activeFerries.get(i).getTripId() == tripId){
+                                    //if it does, and we don't have an active trip
+                                    //for it, add it to the HashMap.
+                                    if(!m_ferryTrips.containsKey(tripId)){
+                                        m_ferryTrips.put(tripId, new FerryTrip(obj));
+                                    }
+                                }
+                            }
+
+
+                        }
+                    }
+                } catch (JSONException e) {
+                    Log.d(MapsActivity.class.toString(), e.getMessage());
+                }
+            }// Query for TRIPS
+            if( requestCode == SHAPES_REQUEST_ID){
+                Log.d(MapsActivity.class.toString(), "SHAPES json: " + jsonResult);
+
+                try{
+                    JSONArray shapesArray = new JSONArray(jsonResult);
+                    List<LatLng> pointList = new ArrayList<>();
+                    for(int i=0; i < shapesArray.length(); i++){
+                        JSONObject obj = shapesArray.getJSONObject(i);
+                        LatLng shapePoint = new LatLng(
+                                Double.parseDouble(obj.getString("shape_pt_lat")),
+                                Double.parseDouble(obj.getString("shape_pt_lon")));
+
+                        pointList.add(shapePoint);
+                    }
+                    PolylineOptions shapeOptions = new PolylineOptions()
+                            .addAll(pointList)
+                            .width(3)
+                            .color(Color.BLUE);
+                    m_map.addPolyline(shapeOptions);
+
+                }catch (JSONException e){
+                    Log.d(MapsActivity.class.toString(), e.getMessage());
+                }
+            }//Query for SHAPES
         }
     }
 
@@ -143,11 +232,13 @@ public class MapsActivity extends AppCompatActivity
     @Override
     public void vehiclesChanged(ArrayList<VehicleInfo> vehicles) {
         // remove all existing ferry markers from the map
+        ArrayList<Marker> testList = new ArrayList<>();
+        testList = m_ferryMarkers;
         for (int i=0; i<m_ferryMarkers.size(); i++) {
             Marker m = m_ferryMarkers.get(i);
             m.remove();
         }
-
+        m_activeFerries = vehicles;
         for (int i=0; i<vehicles.size(); i++) {
             VehicleInfo vi = vehicles.get(i);
             Log.d(MapsActivity.class.toString(), "adding vehicle " + vi.getVehicleId());
@@ -159,5 +250,18 @@ public class MapsActivity extends AppCompatActivity
             );
             m_ferryMarkers.add(m);
         }
+        //Check if the lists are still the same
+        if(!testList.equals(m_ferryMarkers)) {
+            m_activeFerries.clear();
+            m_activeFerries = vehicles;
+            getTripsInProgress();
+        }
+    }
+
+    protected void getTripsInProgress(){
+        m_mgr.startQueryForResult(this, TRIPS_REQUEST_ID, ModelManager.QueryType.TRIPS, null);
+
+        // get the shapes from the model
+        m_mgr.startQueryForResult(this, SHAPES_REQUEST_ID, ModelManager.QueryType.ROUTE_SHAPES, null);
     }
 }
