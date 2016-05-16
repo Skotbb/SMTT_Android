@@ -18,6 +18,7 @@ import org.json.JSONObject;
 import java.lang.reflect.Array;
 import java.net.ConnectException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Timer;
@@ -47,6 +48,7 @@ import java.util.TimerTask;
  */
 public class ModelManager {
 
+    private HashMap m_filteredMap = new HashMap <String, FerryTrip>();
     public enum QueryType {STOPS, ROUTE_SHAPES, TRIPS}
     public enum ResultType {RESULT_OK, RESULT_ERROR}
 
@@ -369,7 +371,7 @@ public class ModelManager {
         }
 
 
-// This fires off an AsyncTask to get the Route info.  We need this because the JSON vehicle info
+        // This fires off an AsyncTask to get the Route info.  We need this because the JSON vehicle info
         // requires us to send a list of route ids.  Yes, I know...the routes are DB,IB,PK...but
         // this is the "right" way to do it...
         // This only happens once, on startup.
@@ -519,6 +521,21 @@ public class ModelManager {
             }
         }
 
+    }
+    /**
+     * Sets the filtered data from the FilterActivity
+     */
+    public void setFilteredMap(HashMap map){
+        // clear the map in the event that it already has data in it...
+        m_filteredMap.clear();
+        // set the map
+        m_filteredMap = map;
+    }
+    /**
+     * Gets the filtered data from the global variable... can be used to display the data
+     */
+    public HashMap getFilteredMap(){
+        return m_filteredMap;
     }
 
 

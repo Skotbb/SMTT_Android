@@ -21,6 +21,34 @@
     <string name="time_label">Time</string>
     <string name="title_activity_schedule">Schedule</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="arrivalSpinnerText">Please select your destination</string>
+    <string name="departureSpinnerText">Please select where you would like to depart from</string>
+    <string name="dateText">Please enter a date</string>
+    <string name="submitFilterText">Filter Trips!</string>
+    <string name="noFilterNeededButton">No Filter Please!</string>
+
+    <string-array name="arrivalOptions">
+        <item>Arrival Locations</item>
+        <item>PK, Peaks Island</item>
+        <item>109, Portland</item>
+        <item>LD, Little Diamond Island</item>
+        <item>GD, Great Diamond Island</item>
+        <item>DC, Diamond Cove</item>
+        <item>LO, Long Island</item>
+        <item>CH, Chebeague Island</item>
+        <item>CF, Cliff Island</item>
+        <item>BI, Bailey Island</item>
+    </string-array>
+    <string-array name="departureOptions">
+        <item>Departure Locations</item>
+        <item>PK, Peaks Island</item>
+        <item>109, Portland</item>
+        <item>LD, Little Diamond Island</item>
+        <item>GD, Great Diamond Island</item>
+        <item>DC, Diamond Cove</item>
+        <item>LO, Long Island</item>
+        <item>CH, Chebeague Island</item>
+        <item>CF, Cliff Island</item>
+        <item>BI, Bailey Island</item>
+    </string-array>
 </resources>
