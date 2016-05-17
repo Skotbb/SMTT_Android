@@ -16,7 +16,7 @@ import java.util.ArrayList;
  */
 public class FerryTrip {
     private int m_tripId;
-    private int m_serviceId;
+    //private int m_serviceId;
     private String m_date; // change this to a Date if you like
     private String m_routeId;
     private String m_shapeId;
@@ -33,7 +33,7 @@ public class FerryTrip {
     public FerryTrip(JSONObject jsObj) {
         try {
             m_tripId = Integer.parseInt(jsObj.getString("trip_id"));
-            m_serviceId = Integer.parseInt(jsObj.getString("service_id"));
+            //m_serviceId = Integer.parseInt(jsObj.getString("service_id"));
             m_date = jsObj.getString("date");
             m_routeId = jsObj.getString("route_id");
             m_shapeId = jsObj.getString("shape_id");
@@ -54,6 +54,9 @@ public class FerryTrip {
 
     }
 
+    public String getShapeId() {
+        return m_shapeId;
+    }
 
     public class FerryStop {
         private int m_stopId;
