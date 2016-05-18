@@ -24,6 +24,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -36,11 +38,11 @@ public class MapsActivity extends AppCompatActivity
     private ModelManager m_mgr;
     private ArrayList<Marker> m_ferryMarkers;
     private ArrayList<VehicleInfo> m_activeFerries;
-    private HashMap<String, ArrayList<FerryTrip>> m_ferryTrips;
+    private HashMap<Integer, String> m_ferryTrips;
 
     private static final int STOPS_REQUEST_ID = 1234567; // whatever
     private static final int SHAPES_REQUEST_ID = 8675309; //Jenny, I got your number
-    private static final int TRIPS_REQUEST_ID = 1011;
+    private static final int TRIPS_REQUEST_ID = 1011; //11
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,7 +106,6 @@ public class MapsActivity extends AppCompatActivity
                         .include(mPortLatLng.get(5))
                         .include(mPortLatLng.get(6))
                         .include(mPortLatLng.get(7))
-                        .include(mPortLatLng.get(8))
                         .build();
 
         // various CameraUpdate objects control the camera
@@ -118,7 +119,6 @@ public class MapsActivity extends AppCompatActivity
         // register to get vehicle updates.
         m_mgr.registerVehicleListener(this);
 
-        //getTripsInProgress();
     }
 
 
@@ -172,7 +172,7 @@ public class MapsActivity extends AppCompatActivity
                 } catch (JSONException e) {
                     Log.d(MapsActivity.class.toString(), e.getMessage());
                 }
-            }//Query for STOPS
+            }// END Query for STOPS
             if (requestCode == TRIPS_REQUEST_ID) {
                 Log.d(MapsActivity.class.toString(), "TRIPS json :" + jsonResult);
 
@@ -182,18 +182,15 @@ public class MapsActivity extends AppCompatActivity
                         for (int j = 0; j < m_activeFerries.size(); j++) { //For each Ferry
                             for (int i = 0; i < tripsArray.length(); i++) {
                                 JSONObject obj = tripsArray.getJSONObject(i);
-                                String routeId = obj.getString("route_id");
+                                String tempId = obj.getString("trip_id");
+                                int tripId = Integer.parseInt(tempId.substring(0, 4));
                                 //Check if its trip matches TripOBJ
-                                if (m_activeFerries.get(j).getRouteId().equalsIgnoreCase(routeId)) {
+                                if (m_activeFerries.get(j).getTripId() == tripId) {
                                     //if it does, and we don't have an active trip
                                     //for it, add it to the HashMap.
-                                    if (!m_ferryTrips.containsKey(routeId)) {
-                                        ArrayList<FerryTrip> temp = new ArrayList<>();
-                                        temp.add(new FerryTrip(obj));
-                                        m_ferryTrips.put(routeId, temp);
-                                    }else{
-                                        m_ferryTrips.get(routeId).add(new FerryTrip(obj));
-                                    }
+                                    m_ferryTrips.put(tripId, obj.getString("shape_id"));
+                                } else if (m_activeFerries.get(j).getRouteId().equalsIgnoreCase("PK")) {
+                                    m_ferryTrips.put(001, obj.getString("shape_id"));
                                 }
                             }
 
@@ -203,7 +200,7 @@ public class MapsActivity extends AppCompatActivity
                 } catch (JSONException e) {
                     Log.d(MapsActivity.class.toString(), e.getMessage());
                 }
-            }// Query for TRIPS
+            }//  END Query for TRIPS
             if (requestCode == SHAPES_REQUEST_ID) {
                 Log.d(MapsActivity.class.toString(), "SHAPES json: " + jsonResult);
 
@@ -212,32 +209,35 @@ public class MapsActivity extends AppCompatActivity
                     List<LatLng> pointList = new ArrayList<>();
 
                     //if shape Object matches active trip shape_id
-                    for (Map.Entry<String, ArrayList<FerryTrip>> entry : m_ferryTrips.entrySet()) {
-                        String key = entry.getKey();
-                        ArrayList<FerryTrip> current = m_ferryTrips.get(key);
-                        for(FerryTrip curTrip : current) {
-                            for (int i = 0; i < shapesArray.length(); i++) {//Check for each shape in array
-                                JSONObject obj = shapesArray.getJSONObject(i);
-                                //if FerryTrip shapeId equals current shape object
-                                //add it to the array
-                                if(obj.getString("shape_id") != null) {
-                                    String shapeId = obj.getString("shape_id");
-                                }
-                                if (curTrip.getShapeId().equalsIgnoreCase(obj.getString("shape_id"))) {
-                                    LatLng shapePoint = new LatLng(
-                                            Double.parseDouble(obj.getString("shape_pt_lat")),
-                                            Double.parseDouble(obj.getString("shape_pt_lon")));
+                    for (Map.Entry<Integer, String> entry : m_ferryTrips.entrySet()) {
+                        int count = 0;
+                        int key = entry.getKey();
+                        String shapeId = m_ferryTrips.get(key);
+                        String objShapeId = null;
+                        for (int i = 0; i < shapesArray.length(); i++) {//Check for each shape in array
+                            JSONObject obj = shapesArray.getJSONObject(i);
+                            //if FerryTrip shapeId equals current shape object
+                            //add it to the array
+                            if (obj.getString("shape_id") != null) {
+                                objShapeId = obj.getString("shape_id");
+                            }
+                            if (shapeId.equalsIgnoreCase(objShapeId)) {
+                                LatLng shapePoint = new LatLng(
+                                        Double.parseDouble(obj.getString("shape_pt_lat")),
+                                        Double.parseDouble(obj.getString("shape_pt_lon")));
 
-                                    pointList.add(shapePoint);
-                                }
+                                pointList.add(shapePoint);
                             }
                         }
+
+                        PolylineOptions shapeOptions = new PolylineOptions()
+                                .addAll(pointList)
+                                .width(5)
+                                .color(Color.rgb((int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255)));
+                        m_map.addPolyline(shapeOptions);
+
                     }
-                    PolylineOptions shapeOptions = new PolylineOptions()
-                            .addAll(pointList)
-                            .width(3)
-                            .color(Color.BLUE);
-                    m_map.addPolyline(shapeOptions);
+
 
                 } catch (JSONException e) {
                     Log.d(MapsActivity.class.toString(), e.getMessage());
@@ -256,7 +256,7 @@ public class MapsActivity extends AppCompatActivity
             Marker m = m_ferryMarkers.get(i);
             m.remove();
         }
-        m_activeFerries = vehicles;
+
         for (int i = 0; i < vehicles.size(); i++) {
             VehicleInfo vi = vehicles.get(i);
             Log.d(MapsActivity.class.toString(), "adding vehicle " + vi.getVehicleId());
@@ -269,17 +269,33 @@ public class MapsActivity extends AppCompatActivity
             m_ferryMarkers.add(m);
         }
         //Check if the lists are still the same
-        m_activeFerries = vehicles;
-        getTripsInProgress();
+        //m_activeFerries = vehicles;
+        getTripsInProgress(vehicles);
 
     }
 
-    protected void getTripsInProgress() {
-        Bundle bundle = new Bundle();
-        bundle.putString(ModelManager.QUERY_TRIP_DATE, "20160516");
-        m_mgr.startQueryForResult(this, TRIPS_REQUEST_ID, ModelManager.QueryType.TRIPS, bundle);
+    protected void getTripsInProgress(ArrayList<VehicleInfo> vehicles) {
 
-        // get the shapes from the model
-        m_mgr.startQueryForResult(this, SHAPES_REQUEST_ID, ModelManager.QueryType.ROUTE_SHAPES, null);
+        if (vehicles.size() != m_activeFerries.size() || m_activeFerries == null) {
+            Calendar calendar = new GregorianCalendar();
+            String year = String.valueOf(calendar.get(Calendar.YEAR));
+            String month = String.valueOf(calendar.get(Calendar.MONTH));
+            if (month.length() == 1) {
+                month = "0" + month;
+            }
+            String day = String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
+            if (day.length() == 1) {
+                day = "0" + day;
+            }
+
+            m_activeFerries = vehicles;
+
+            Bundle bundle = new Bundle();
+            bundle.putString(ModelManager.QUERY_TRIP_DATE, year + month + day);
+            m_mgr.startQueryForResult(this, TRIPS_REQUEST_ID, ModelManager.QueryType.TRIPS, bundle);
+
+            // get the shapes from the model
+            m_mgr.startQueryForResult(this, SHAPES_REQUEST_ID, ModelManager.QueryType.ROUTE_SHAPES, null);
+        }
     }
 }

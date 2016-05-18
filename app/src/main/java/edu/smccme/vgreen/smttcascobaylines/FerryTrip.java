@@ -33,9 +33,9 @@ public class FerryTrip {
     public FerryTrip(JSONObject jsObj) {
         try {
             m_tripId = Integer.parseInt(jsObj.getString("trip_id"));
+            m_routeId = jsObj.getString("route_id");
             //m_serviceId = Integer.parseInt(jsObj.getString("service_id"));
             m_date = jsObj.getString("date");
-            m_routeId = jsObj.getString("route_id");
             m_shapeId = jsObj.getString("shape_id");
         } catch(JSONException e) {
             Log.d(FerryTrip.class.toString(), e.getMessage());
@@ -57,6 +57,8 @@ public class FerryTrip {
     public String getShapeId() {
         return m_shapeId;
     }
+
+
 
     public class FerryStop {
         private int m_stopId;
