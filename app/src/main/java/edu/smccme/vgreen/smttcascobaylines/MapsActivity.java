@@ -1,5 +1,6 @@
 package edu.smccme.vgreen.smttcascobaylines;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -138,6 +139,9 @@ public class MapsActivity extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_schedule) {
+            Intent intent = new Intent(getApplicationContext(), FilterActivity.class);
+            startActivity(intent);
+
             return true;
         } else if (id == R.id.action_map) {
             return true;

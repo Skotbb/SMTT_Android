@@ -23,6 +23,9 @@ import org.json.JSONObject;
 import java.lang.reflect.Array;
 import java.net.ConnectException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -543,6 +546,47 @@ public class ModelManager {
         return m_filteredMap;
     }
 
+public static class ScheduleManager{
+    private static ScheduleManager sScheduleManager;
+    private List<Schedule> mSchedules;
 
+    private ScheduleManager(){
+        mSchedules = new ArrayList<>();
+        Calendar cal = new GregorianCalendar();
+        mSchedules.add(new Schedule(1, "Portland", "Peak's Island", cal));
+        mSchedules.add(new Schedule(2, "Portland", "Great Diamond", cal));
+        mSchedules.add(new Schedule(3, "Portland", "Inner Bay", cal));
+        mSchedules.add(new Schedule(4, "Portland", "Douche Bay", cal));
+        mSchedules.add(new Schedule(5, "Portland", "Somewhere Else", cal));
+        mSchedules.add(new Schedule(6, "Portland", "Your Mom", cal));
+    }
+
+    public static ScheduleManager getInstance(){
+        if(sScheduleManager == null){
+            sScheduleManager = new ScheduleManager();
+        }
+
+        return sScheduleManager;
+    }
+
+    public void addSchedule(Schedule sched){
+        mSchedules.add(sched);
+    }
+
+    public List<Schedule> getSchedules(){
+        return mSchedules;
+    }
+
+    public Schedule getScheduleById(int id){
+        Iterator<Schedule> itr = mSchedules.iterator();
+        while(itr.hasNext()){
+            Schedule curr = itr.next();
+            if(curr.getScheduleId() == id){
+                return curr;
+            }
+        }
+        return null;
+    }
+}
 
 }

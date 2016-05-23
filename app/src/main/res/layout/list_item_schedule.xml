@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:rowCount="1"
+            android:columnCount="4"
+            android:orientation="horizontal">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ID"
+        android:id="@+id/sched_id_label"
+        android:layout_row="0"
+        android:layout_column="0"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="16dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Departure Port"
+        android:id="@+id/sched_pod_label"
+        android:layout_row="0"
+        android:layout_column="1"
+        android:layout_marginTop="16dp"
+        android:layout_marginLeft="10dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Arrival Port"
+        android:id="@+id/sched_poa_label"
+        android:layout_row="0"
+        android:layout_column="2"
+        android:layout_marginTop="16dp"
+        android:layout_marginLeft="10dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Departure Time"
+        android:id="@+id/sched_departTime_label"
+        android:layout_row="0"
+        android:layout_column="3"
+        android:layout_marginTop="16dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="16dp"/>
+</GridLayout>

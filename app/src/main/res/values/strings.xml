@@ -24,31 +24,28 @@
     <string name="arrivalSpinnerText">Please select your destination</string>
     <string name="departureSpinnerText">Please select where you would like to depart from</string>
     <string name="dateText">Please enter a date</string>
-    <string name="submitFilterText">Filter Trips!</string>
-    <string name="noFilterNeededButton">No Filter Please!</string>
+    <string name="submitFilterText">Submit Filters</string>
 
-    <string-array name="arrivalOptions">
-        <item>Arrival Locations</item>
-        <item>PK, Peaks Island</item>
-        <item>109, Portland</item>
-        <item>LD, Little Diamond Island</item>
-        <item>GD, Great Diamond Island</item>
-        <item>DC, Diamond Cove</item>
-        <item>LO, Long Island</item>
-        <item>CH, Chebeague Island</item>
-        <item>CF, Cliff Island</item>
-        <item>BI, Bailey Island</item>
+    <string-array name="locationOptions">
+        <item>Peaks Island</item>
+        <item>Portland</item>
+        <item>Little Diamond Island</item>
+        <item>Great Diamond Island</item>
+        <item>Diamond Cove</item>
+        <item>Long Island</item>
+        <item>Chebeague Island</item>
+        <item>Cliff Island</item>
+        <item>Bailey Island</item>
     </string-array>
-    <string-array name="departureOptions">
-        <item>Departure Locations</item>
-        <item>PK, Peaks Island</item>
-        <item>109, Portland</item>
-        <item>LD, Little Diamond Island</item>
-        <item>GD, Great Diamond Island</item>
-        <item>DC, Diamond Cove</item>
-        <item>LO, Long Island</item>
-        <item>CH, Chebeague Island</item>
-        <item>CF, Cliff Island</item>
-        <item>BI, Bailey Island</item>
+    <string-array name="locationShortOptions">
+        <item>PK</item>
+        <item>109</item>
+        <item>LD</item>
+        <item>GD</item>
+        <item>DC</item>
+        <item>LO</item>
+        <item>CH</item>
+        <item>CF</item>
+        <item>BI</item>
     </string-array>
 </resources>

@@ -48,14 +48,16 @@ public class FilterActivity extends AppCompatActivity
     private final String savedBundleArrival = "savedBundleArrival";
     private final String savedBundleDeparture = "savedBundleDeparture";
     private final String savedBundleDate = "savedBundleDate";
+    private final int TRIPS_REQUEST_ID = 923;
 
     // create some global variables
     Context context;
     private HashMap<String, FerryTrip> ferryTrips;
-    private Button noFilterButton;
+    //private Button noFilterButton;
     private Button submitButton;
     private CalendarView calendar;
     private Spinner departureSpinner;
+    private ArrayAdapter<CharSequence> departureAdapter;
     private Spinner arrivalSpinner;
     private EditText dateText;
     //ArrayList<Stop> stops = new ArrayList<>();
@@ -95,12 +97,13 @@ public class FilterActivity extends AppCompatActivity
         setContentView(R.layout.activity_filter);
 
         //*********************** Added by Liam Hand ***************************
+        //*****************Modified by Scott Thompson**********************************
 
         // set the spinner
         departureSpinner = (Spinner) findViewById(R.id.departureSpinner);
         // attach the array
-        ArrayAdapter<CharSequence> departureAdapter = ArrayAdapter.createFromResource(this,
-                R.array.departureOptions, android.R.layout.simple_spinner_item);
+        departureAdapter = ArrayAdapter.createFromResource(this,
+                R.array.locationOptions, android.R.layout.simple_spinner_item);
         // departureAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
 
@@ -109,12 +112,19 @@ public class FilterActivity extends AppCompatActivity
         // set the listener to the spinners and buttons
         departureSpinner.setOnItemSelectedListener(this);
 
+        if (mMyPort != null) {
+            String portName = mMyPort.getFullLabel();
+            int matchedLoc = departureAdapter.getPosition(portName);
+
+            departureSpinner.setSelection(matchedLoc);
+        }
+
 
         // set the spinner
         arrivalSpinner = (Spinner) findViewById(R.id.arrivalSpinner);
         // attach the array
         ArrayAdapter<CharSequence> arrivalAdapter = ArrayAdapter.createFromResource(this,
-                R.array.arrivalOptions, android.R.layout.simple_spinner_item);
+                R.array.locationOptions, android.R.layout.simple_spinner_item);
         // departureAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         // attach the spinner
         arrivalSpinner.setAdapter(arrivalAdapter);
@@ -124,9 +134,6 @@ public class FilterActivity extends AppCompatActivity
         // initialize the submit button
         submitButton = (Button) findViewById(R.id.submitFilterButton);
         submitButton.setOnClickListener(this);
-        // initialize the no filter needed button
-        noFilterButton = (Button) findViewById(R.id.noFilterNeededButton);
-        noFilterButton.setOnClickListener(this);
 
         // set the calendar
         initializeCalendar();
@@ -146,7 +153,7 @@ public class FilterActivity extends AppCompatActivity
 
         //Initialize Widgets.
         mClosestPortTV = (TextView) findViewById(R.id.closest_port_TV);
-    }
+    } //END onCreate
 
     @Override
     protected void onStart() {
@@ -172,6 +179,24 @@ public class FilterActivity extends AppCompatActivity
     protected void updateForLocation() {
         if (mMyPort != null) {
             mClosestPortTV.setText(mMyPort.getFullLabel());
+            Toast.makeText(getApplicationContext(), mMyPort.getPortLat() + "," + mMyPort.getPortLon(), Toast.LENGTH_SHORT);
+
+
+            String portName = mMyPort.getFullLabel();
+            int matchedLoc = departureAdapter.getPosition(portName);
+
+            departureSpinner.setSelection(matchedLoc);
+
+        }
+    }
+
+    private void setAvailablePorts(){
+        if(departureSpinner != null){
+            String depart = String.valueOf(departureSpinner.getSelectedItem());
+
+            Bundle bundle = new Bundle();
+            bundle.putString(ModelManager.QUERY_TRIP_DEPART_PORT_ID, depart);
+            mMgr.startQueryForResult(this, TRIPS_REQUEST_ID, ModelManager.QueryType.TRIPS, bundle);
         }
     }
 
@@ -230,6 +255,7 @@ public class FilterActivity extends AppCompatActivity
 
     /**
      * Added by Liam Hand
+     * Modified by Scott Thompson
      * This method will determine which item was selected from the respective spinners and set
      * the global variables for the query.
      *
@@ -341,6 +367,7 @@ public class FilterActivity extends AppCompatActivity
 
         calendar.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
             String newMonth = "";
+
             @Override
             public void onSelectedDayChange(CalendarView calendarView, int year, int month, int day) {
                 Toast.makeText(getApplicationContext(), "Selected Date:\n" + "Day = " + day + "\n" +
@@ -349,10 +376,9 @@ public class FilterActivity extends AppCompatActivity
                 // because the months go from 0-11 in android studios, we need to add one to the
                 // number that represents the month
                 month = month + 1;
-                if(month < 10){
+                if (month < 10) {
                     newMonth = 0 + "" + month;
-                }
-                else if (day >= 10){
+                } else if (day >= 10) {
                     newMonth = month + "";
                 }
 
@@ -428,7 +454,7 @@ public class FilterActivity extends AppCompatActivity
     public void onClick(View v) {
         if (v.getId() == R.id.submitFilterButton) {
 
-            if (bundleArrival.equals(bundleDeparture)){
+            if (bundleArrival.equals(bundleDeparture)) {
                 Toast.makeText(this, "Caution: You have selected the same ports for both departure" +
                         " and arrival.", Toast.LENGTH_SHORT).show();
             }
@@ -452,21 +478,6 @@ public class FilterActivity extends AppCompatActivity
             if (bundleDate == "NOTHING_SELECTED") {
                 Toast.makeText(this, "Please select a date. ", Toast.LENGTH_SHORT).show();
             }
-        }
-        else if (v.getId()== R.id.noFilterNeededButton){
-            // start the query with no parameters to get all of the trips
-            Bundle b = new Bundle();
-            b.putString(ModelManager.QUERY_TRIP_DATE, "");  // blank String for all trips
-            b.putString(ModelManager.QUERY_TRIP_DEPART_PORT_ID, ""); // blank String for all trips
-            b.putString(ModelManager.QUERY_TRIP_ARRIVE_PORT_ID, ""); // blank String for all trips
-
-            mMgr.startQueryForResult(this, 246800, ModelManager.QueryType.TRIPS, b);
-
-            //mMgr.setFilteredMap(ferryTrips);
-
-            Intent intent = new Intent(v.getContext(), ScheduleActivity.class);
-            startActivity(intent);
-
         }
     }
 
@@ -501,7 +512,7 @@ public class FilterActivity extends AppCompatActivity
      * This method will save the variables when the device changes orientation or the user switches activities
      */
     @Override
-    public void onPause(){
+    public void onPause() {
         // save the variables
         SharedPreferences.Editor editor = savedValues.edit();
         editor.putString(savedArrivalValue, arrivalValue);
@@ -513,11 +524,12 @@ public class FilterActivity extends AppCompatActivity
 
         super.onPause();
     }
+
     /**
      * This method will get the variables when the activity restarts
      */
     @Override
-    public void onResume(){
+    public void onResume() {
         super.onResume();
         // get the values back into their correct variables
         arrivalValue = savedValues.getString(savedArrivalValue, "");

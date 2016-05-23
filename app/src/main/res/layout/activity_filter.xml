@@ -33,26 +33,28 @@
             android:layout_weight="1"/>
 
     </LinearLayout>
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
+        android:orientation="vertical"
         android:layout_height="match_parent"
         android:gravity="center_vertical">
         <Spinner
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="20dp"
             android:id="@+id/departureSpinner"
-            android:entries="@array/departureOptions"
-            android:layout_marginTop="33dp"
+            android:entries="@array/locationOptions"
+            android:layout_marginTop="16dp"
             android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true">
+            android:layout_alignParentStart="true"
+            android:spinnerMode="dropdown">
         </Spinner>
 
         <Spinner
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="20dp"
             android:id="@+id/arrivalSpinner"
-            android:entries="@array/arrivalOptions"
-            android:layout_marginTop="33dp"
+            android:entries="@array/locationOptions"
+            android:layout_marginTop="16dp"
             android:layout_below="@+id/departureSpinner"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true">
@@ -60,7 +62,7 @@
 
         <CalendarView
             android:layout_width="match_parent"
-            android:layout_height="300dp"
+            android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:layout_marginTop="16dp"
             android:paddingBottom="16dp"
@@ -68,23 +70,15 @@
             android:layout_below="@+id/arrivalSpinner"
             android:layout_centerHorizontal="true" />
         <Button
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/submitFilterButton"
             android:text="@string/submitFilterText"
             android:layout_below="@+id/calendarView"
             android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true" />
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/noFilterNeededButton"
-            android:text="@string/noFilterNeededButton"
-            android:layout_below="@+id/calendarView"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true" />
+            android:layout_alignParentEnd="true"
+            android:textSize="24dp"/>
 
 
         <!--
@@ -99,6 +93,6 @@
                 android:layout_marginBottom="138dp">
             </EditText>
             -->
-    </RelativeLayout>
+    </LinearLayout>
 
 </LinearLayout>
