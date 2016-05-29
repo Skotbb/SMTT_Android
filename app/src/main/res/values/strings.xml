@@ -25,6 +25,8 @@
     <string name="departureSpinnerText">Please select where you would like to depart from</string>
     <string name="dateText">Please enter a date</string>
     <string name="submitFilterText">Submit Filters</string>
+    <string name="date_picker_title">Choose a Date</string>
+    <string name="label_pick_date_TV">Click to choose a date</string>
 
     <string-array name="locationOptions">
         <item>Peaks Island</item>

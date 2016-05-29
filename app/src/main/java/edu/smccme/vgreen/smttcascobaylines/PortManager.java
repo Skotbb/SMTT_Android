@@ -55,4 +55,15 @@ public class PortManager {
         return null;
     }
 
+    public String getPortIdByLabel(String label){
+        for (Port port : mPorts){
+            if(port.getFullLabel().equalsIgnoreCase(label) ||
+                    port.getShortLabel().equalsIgnoreCase(label) ||
+                    String.valueOf(port.getPortId()).equalsIgnoreCase(label)){
+                return String.valueOf(port.getPortId());
+            }
+        }
+        return null;
+    }
+
 }

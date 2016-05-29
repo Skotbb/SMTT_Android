@@ -228,6 +228,7 @@ public class ModelManager {
     }
 
     // ********************************************
+    //  **Written by Scott Thompson ***************
     // GPS and Location Helpers
 
     private MyLocationManager mMyLocationManager;
@@ -312,6 +313,65 @@ public class ModelManager {
         }
 
         return null;
+    }
+
+    // ******* Holder for Schedule Filter ******
+    // ** Written by: Scott Thompson ***********
+    private static ScheduleFilter mFilter;
+
+
+    public static ScheduleFilter getFilter(){
+        if(mFilter == null){
+            mFilter = new ScheduleFilter();
+
+            return mFilter;
+        }
+        return mFilter;
+
+    }
+
+    public static class ScheduleFilter {
+        private String pod;
+        private String poa;
+        private String dateString;
+
+        private Date searchDate;
+
+        private ScheduleFilter(){
+
+        }
+
+        public String getPod() {
+            return pod;
+        }
+
+        public void setPod(String pod) {
+            this.pod = pod;
+        }
+
+        public String getPoa() {
+            return poa;
+        }
+
+        public void setPoa(String poa) {
+            this.poa = poa;
+        }
+
+        public String getDateString() {
+            return dateString;
+        }
+
+        public void setDateString(String dateString) {
+            this.dateString = dateString;
+        }
+
+        public Date getSearchDate() {
+            return searchDate;
+        }
+
+        public void setSearchDate(Date searchDate) {
+            this.searchDate = searchDate;
+        }
     }
 
 

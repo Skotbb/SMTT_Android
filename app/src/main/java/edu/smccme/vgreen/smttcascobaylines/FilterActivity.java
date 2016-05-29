@@ -1,14 +1,17 @@
 package edu.smccme.vgreen.smttcascobaylines;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,6 +22,7 @@ import android.widget.Button;
 import android.widget.CalendarView;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,12 +39,17 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 
 public class FilterActivity extends AppCompatActivity
         implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
-        LocationListener, AdapterView.OnItemSelectedListener, ModelManager.QueryListener, View.OnClickListener {
+        LocationListener, AdapterView.OnItemSelectedListener, Spinner.OnItemClickListener,
+        ModelManager.QueryListener, View.OnClickListener, DatePickerFragment.DatePickerListener {
     // ********************* Added by Liam Hand ******************
     private SharedPreferences savedValues;
     private final String savedArrivalValue = "savedArrivalValue";
@@ -48,7 +57,10 @@ public class FilterActivity extends AppCompatActivity
     private final String savedBundleArrival = "savedBundleArrival";
     private final String savedBundleDeparture = "savedBundleDeparture";
     private final String savedBundleDate = "savedBundleDate";
+    private final String DIALOGE_DATE = "DialogDate";
+
     private final int TRIPS_REQUEST_ID = 923;
+    private static final int REQUEST_DATE = 0;
 
     // create some global variables
     Context context;
@@ -58,12 +70,15 @@ public class FilterActivity extends AppCompatActivity
     private CalendarView calendar;
     private Spinner departureSpinner;
     private ArrayAdapter<CharSequence> departureAdapter;
-    private Spinner arrivalSpinner;
+    private Spinner arrivalSpinner = null;
+    ArrayAdapter<String> arrivalAdapter = null;
     private EditText dateText;
     //ArrayList<Stop> stops = new ArrayList<>();
-    ArrayList<Object> trips = new ArrayList<>(); // trips
+    HashSet<String> availPorts = new HashSet<>(); // trips
     //ArrayList<Routes> routes = new ArrayList<>();
     ArrayList<Object> boats = new ArrayList<>(); // boats
+    int itemSelected = 99;
+    private Date mSelectedDate;
 
     // some String variables to use to filter the data.  (Added on 5-6-2016 by Liam Hand)
     private String arrivalValue = "NO_FILTER_NEEDED";
@@ -74,6 +89,9 @@ public class FilterActivity extends AppCompatActivity
     // ************************************************************
 
     private static final String DEBUG_TAG = "Filter_Activity";
+
+    private Calendar mCalendar;
+    private String mMonth, mDay, mYear;
 
     protected GoogleApiClient mClient;
     protected LocationRequest mLocationRequest;
@@ -90,11 +108,24 @@ public class FilterActivity extends AppCompatActivity
 
     //Test TextView to check Location
     private TextView mClosestPortTV;
+    private TextView mChooseDateTV;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_filter);
+
+        mCalendar = new GregorianCalendar();
+
+        mYear = String.valueOf(mCalendar.get(Calendar.YEAR));
+        mMonth = String.valueOf(mCalendar.get(Calendar.MONTH));
+        if (mMonth.length() == 1) {
+            mMonth = "0" + mMonth;
+        }
+        mDay = String.valueOf(mCalendar.get(Calendar.DAY_OF_MONTH));
+        if (mDay.length() == 1) {
+            mDay = "0" + mDay;
+        }
 
         //*********************** Added by Liam Hand ***************************
         //*****************Modified by Scott Thompson**********************************
@@ -106,6 +137,8 @@ public class FilterActivity extends AppCompatActivity
                 R.array.locationOptions, android.R.layout.simple_spinner_item);
         // departureAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
+        arrivalSpinner = (Spinner) findViewById(R.id.arrivalSpinner);
+        arrivalSpinner.setOnItemSelectedListener(this);
 
         // attach the spinner
         departureSpinner.setAdapter(departureAdapter);
@@ -118,25 +151,26 @@ public class FilterActivity extends AppCompatActivity
 
             departureSpinner.setSelection(matchedLoc);
         }
+        mChooseDateTV = (TextView) findViewById(R.id.choose_date_TV);
 
+        mChooseDateTV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FragmentManager manager = getSupportFragmentManager();
+                DatePickerFragment dialog = DatePickerFragment.newInstance(mCalendar.getTime());
+
+                dialog.show(manager, DIALOGE_DATE);
+            }
+
+
+        });
 
         // set the spinner
-        arrivalSpinner = (Spinner) findViewById(R.id.arrivalSpinner);
-        // attach the array
-        ArrayAdapter<CharSequence> arrivalAdapter = ArrayAdapter.createFromResource(this,
-                R.array.locationOptions, android.R.layout.simple_spinner_item);
-        // departureAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        // attach the spinner
-        arrivalSpinner.setAdapter(arrivalAdapter);
-        // set the listener to the spinners and buttons
-        arrivalSpinner.setOnItemSelectedListener(this);
+
 
         // initialize the submit button
         submitButton = (Button) findViewById(R.id.submitFilterButton);
         submitButton.setOnClickListener(this);
-
-        // set the calendar
-        initializeCalendar();
 
         // get the Saved Preferences
         savedValues = getSharedPreferences("SavedValues", MODE_PRIVATE);
@@ -154,6 +188,36 @@ public class FilterActivity extends AppCompatActivity
         //Initialize Widgets.
         mClosestPortTV = (TextView) findViewById(R.id.closest_port_TV);
     } //END onCreate
+
+    private void setArrivalSpinner(List<String> newList) {
+
+        //Convert the Port ID to the full label
+        List<String> displayList = new ArrayList<>();
+        for (String id : newList) {
+            if (id.length() < 2) {
+                Port curr = mMyPortManager.getPortById(Integer.parseInt(id));
+                displayList.add(curr.getFullLabel());
+            } else {
+                if (!id.equals(null)) {
+                    int pId = Integer.parseInt(mMyPortManager.getPortIdByLabel(id));
+                    displayList.add(mMyPortManager.getPortById(pId).getFullLabel());
+                }
+            }
+        }
+
+        // attach the array
+        arrivalAdapter = new ArrayAdapter<String>(getApplicationContext(),
+                android.R.layout.simple_spinner_item, displayList);
+
+        // departureAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // attach the spinner
+        arrivalAdapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
+        arrivalSpinner.setAdapter(arrivalAdapter);
+        // set the listener to the spinners and buttons
+
+        arrivalAdapter.notifyDataSetChanged();
+
+    }
 
     @Override
     protected void onStart() {
@@ -190,13 +254,36 @@ public class FilterActivity extends AppCompatActivity
         }
     }
 
-    private void setAvailablePorts(){
-        if(departureSpinner != null){
+    private void setAvailablePorts() {
+        if (departureSpinner != null) {
             String depart = String.valueOf(departureSpinner.getSelectedItem());
+            depart = mMyPortManager.getPortIdByLabel(depart);
 
-            Bundle bundle = new Bundle();
-            bundle.putString(ModelManager.QUERY_TRIP_DEPART_PORT_ID, depart);
-            mMgr.startQueryForResult(this, TRIPS_REQUEST_ID, ModelManager.QueryType.TRIPS, bundle);
+            departureValue = depart;
+            //if Leaving from Portland, all options are available
+            if (departureValue.equalsIgnoreCase("2")) {
+                List<Port> temp = new ArrayList<>();
+                List<String> names = new ArrayList<>();
+                temp.addAll(mMyPortManager.getPorts());
+
+                for (int i = 0; i < temp.size(); i++) {
+                    names.add(temp.get(i).getFullLabel());
+                }
+
+                setArrivalSpinner(names);
+
+            } else {
+                //Query for ports attached to departure port
+                Bundle bundle = new Bundle();
+                bundle.putString(ModelManager.QUERY_TRIP_DATE, mYear + mMonth + mDay);
+                //bundle.putString(ModelManager.QUERY_TRIP_DEPART_PORT_ID, depart);
+                mMgr.startQueryForResult(this, TRIPS_REQUEST_ID, ModelManager.QueryType.TRIPS, bundle);
+                //Use the list to convert the ArrivalSpinner to applicable ports
+                if (availPorts != null) {
+                    setArrivalSpinner(new ArrayList<String>(availPorts));
+                }
+            }
+
         }
     }
 
@@ -265,95 +352,15 @@ public class FilterActivity extends AppCompatActivity
      * @param id
      */
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        if (parent.getId() == R.id.arrivalSpinner) {
-            arrivalValue = parent.getItemAtPosition(position).toString();
-            switch (arrivalValue) {
-                case "Arrival Locations":
-                    bundleArrival = "NOTHING_SELECTED"; // "If I learned anything as a businessman, it's redundancy" -- Malcolm Merlyn
-                    // Toast.makeText(this, bundleArrival, Toast.LENGTH_SHORT).show();
-                    break;
-                case "PK, Peaks Island":
-                    bundleArrival = "0";
-                    // Toast.makeText(this, bundleArrival, Toast.LENGTH_SHORT).show();
-                    break;
-                case "109, Portland":
-                    bundleArrival = "1";
-                    // Toast.makeText(this, bundleArrival, Toast.LENGTH_SHORT).show();
-                    break;
-                case "LD, Little Diamond Island":
-                    bundleArrival = "2";
-                    // Toast.makeText(this, bundleArrival, Toast.LENGTH_SHORT).show();
-                    break;
-                case "GD, Great Diamond Island":
-                    bundleArrival = "3";
-                    // Toast.makeText(this, bundleArrival, Toast.LENGTH_SHORT).show();
-                    break;
-                case "DC, Diamond Cove":
-                    bundleArrival = "4";
-                    // Toast.makeText(this, bundleArrival, Toast.LENGTH_SHORT).show();
-                    break;
-                case "LO, Long Island":
-                    bundleArrival = "5";
-                    // Toast.makeText(this, bundleArrival, Toast.LENGTH_SHORT).show();
-                    break;
-                case "CH, Chebeague Island":
-                    bundleArrival = "6";
-                    // Toast.makeText(this, bundleArrival, Toast.LENGTH_SHORT).show();
-                    break;
-                case "CF, Cliff Island":
-                    bundleArrival = "7";
-                    // Toast.makeText(this, bundleArrival, Toast.LENGTH_SHORT).show();
-                    break;
-                case "BI, Bailey Island":
-                    bundleArrival = "8";
-                    // Toast.makeText(this, bundleArrival, Toast.LENGTH_SHORT).show();
-                    break;
-            }
-        } else if (parent.getId() == R.id.departureSpinner) {
-            departureValue = parent.getItemAtPosition(position).toString();
-            switch (departureValue) {
-                case "Departure Locations":
-                    bundleDeparture = "NOTHING_SELECTED"; // "If I learned anything as a businessman, it's redundancy" -- Malcolm Merlyn
-                    // Toast.makeText(this, bundleDeparture, Toast.LENGTH_SHORT).show();
-                    break;
-                case "PK, Peaks Island":
-                    bundleDeparture = "0";
-                    // Toast.makeText(this, bundleDeparture, Toast.LENGTH_SHORT).show();
-                    break;
-                case "109, Portland":
-                    bundleDeparture = "1";
-                    // Toast.makeText(this, bundleDeparture, Toast.LENGTH_SHORT).show();
-                    break;
-                case "LD, Little Diamond Island":
-                    bundleDeparture = "2";
-                    // Toast.makeText(this, bundleDeparture, Toast.LENGTH_SHORT).show();
-                    break;
-                case "GD, Great Diamond Island":
-                    bundleDeparture = "3";
-                    // Toast.makeText(this, bundleDeparture, Toast.LENGTH_SHORT).show();
-                    break;
-                case "DC, Diamond Cove":
-                    bundleDeparture = "4";
-                    // Toast.makeText(this, bundleDeparture, Toast.LENGTH_SHORT).show();
-                    break;
-                case "LO, Long Island":
-                    bundleDeparture = "5";
-                    // Toast.makeText(this, bundleDeparture, Toast.LENGTH_SHORT).show();
-                    break;
-                case "CH, Chebeague Island":
-                    bundleDeparture = "6";
-                    // Toast.makeText(this, bundleDeparture, Toast.LENGTH_SHORT).show();
-                    break;
-                case "CF, Cliff Island":
-                    bundleDeparture = "7";
-                    // Toast.makeText(this, bundleDeparture, Toast.LENGTH_SHORT).show();
-                    break;
-                case "BI, Bailey Island":
-                    bundleDeparture = "8";
-                    // Toast.makeText(this, bundleDeparture, Toast.LENGTH_SHORT).show();
-                    break;
-            }
+        if (itemSelected != position) {
+            setAvailablePorts();
+            itemSelected = position;
         }
+        if (parent.getId() == R.id.arrivalSpinner) {
+            arrivalSpinner.setSelection(position);
+        }
+
+
     }
 
     @Override
@@ -361,32 +368,6 @@ public class FilterActivity extends AppCompatActivity
 
     }
 
-    public void initializeCalendar() {
-        // set up the calendar view
-        calendar = (CalendarView) findViewById(R.id.calendarView);
-
-        calendar.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
-            String newMonth = "";
-
-            @Override
-            public void onSelectedDayChange(CalendarView calendarView, int year, int month, int day) {
-                Toast.makeText(getApplicationContext(), "Selected Date:\n" + "Day = " + day + "\n" +
-                        "Month = " + month + "\n" + "Year = " + year, Toast.LENGTH_LONG).show();
-
-                // because the months go from 0-11 in android studios, we need to add one to the
-                // number that represents the month
-                month = month + 1;
-                if (month < 10) {
-                    newMonth = 0 + "" + month;
-                } else if (day >= 10) {
-                    newMonth = month + "";
-                }
-
-                bundleDate = year + "" + newMonth + "" + day;
-
-            }
-        });
-    }
 
     /**
      * This method will be called to start the query for the data...
@@ -412,6 +393,8 @@ public class FilterActivity extends AppCompatActivity
 
     @Override
     public void onQueryResult(int requestCode, ModelManager.ResultType resultCode, String jsonResult) {
+
+
         if (requestCode == 246800) {
             // do something...
             Log.d(ModelTestingActivity.class.toString(), "TRIPS: " + jsonResult);
@@ -448,36 +431,74 @@ public class FilterActivity extends AppCompatActivity
             }
         }
 
+        if (requestCode == TRIPS_REQUEST_ID) {
+            Log.d(FilterActivity.class.toString(), jsonResult);
+
+            //Create a set for Routes that include port of departure
+            HashSet<String> routeSet = new HashSet<>();
+            try {
+                JSONArray jsArr = new JSONArray(jsonResult);
+                departureValue = mMyPortManager.getPortIdByLabel(departureValue);
+                for (int i = 0; i < jsArr.length(); i++) {
+                    JSONObject obj = jsArr.getJSONObject(i);
+                    if (departureValue.equalsIgnoreCase(obj.getString("stop_id"))) {
+                        routeSet.add(obj.getString("route_id"));
+                    }
+                }
+                //Check each Route in the set for attached ports.
+                for (String route : routeSet) {
+                    for (int i = 0; i < jsArr.length(); i++) {
+                        JSONObject obj = jsArr.getJSONObject(i);
+                        if (obj.getString("route_id").equalsIgnoreCase(route)) {
+                            availPorts.add(obj.getString("stop_id"));
+                        }
+                    }
+                }
+
+            } catch (JSONException e) {
+                Log.d(ModelTestingActivity.class.toString(), e.getMessage());
+            }
+
+
+        }
+
     }
 
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.submitFilterButton) {
+            ModelManager.ScheduleFilter filter = ModelManager.getFilter();
+            boolean hasPOD = false,
+                    hasDate = false;
+            //Check for Null Values
+            if (arrivalSpinner.getSelectedItem() == null) {
+                Toast.makeText(FilterActivity.this, "Select a Port of Arrival", Toast.LENGTH_SHORT).show();
+            } else {
+                String temp = arrivalSpinner.getSelectedItem().toString();
+                Log.d("TESTIES", temp);
+                filter.setPoa(temp);
 
-            if (bundleArrival.equals(bundleDeparture)) {
-                Toast.makeText(this, "Caution: You have selected the same ports for both departure" +
-                        " and arrival.", Toast.LENGTH_SHORT).show();
+                hasPOD = true;
             }
-            // if the bundle is complete, send out the query and then tell the Model Manager what the
-            // filtered data is
-            if (bundleArrival != "NOTHING_SELECTED" && bundleDeparture != "NOTHING_SELECTED"
-                    && bundleDate != "NOTHING_SELECTED") {
-                startTheQuery();
-                mMgr.setFilteredMap(ferryTrips);
 
-                Intent intent = new Intent(v.getContext(), ScheduleActivity.class);
-                startActivity(intent);
+            if(mSelectedDate == null){
+                Toast.makeText(FilterActivity.this, "Please select a date", Toast.LENGTH_SHORT).show();
+            }else {
+                String dateStuff = mChooseDateTV.getText().toString();
 
+                filter.setSearchDate(mSelectedDate);
+                filter.setDateString(dateStuff);
+                Log.d("TESTIES", dateStuff);
+
+                hasDate = true;
             }
-            if (bundleArrival == "NOTHING_SELECTED") {
-                Toast.makeText(this, "Please select an arrival port. ", Toast.LENGTH_SHORT).show();
-            }
-            if (bundleDeparture == "NOTHING_SELECTED") {
-                Toast.makeText(this, "Please select a departure port. ", Toast.LENGTH_SHORT).show();
-            }
-            if (bundleDate == "NOTHING_SELECTED") {
-                Toast.makeText(this, "Please select a date. ", Toast.LENGTH_SHORT).show();
-            }
+
+            String temp = departureSpinner.getSelectedItem().toString();
+            Log.d("TESTIES", temp);
+            filter.setPod(temp);
+
+
+
         }
     }
 
@@ -540,6 +561,39 @@ public class FilterActivity extends AppCompatActivity
         // Toast.makeText(this, arrivalValue + " " +  departureValue + " " +  bundleDate + " " + bundleArrival + " "+  bundleDeparture,
         //     Toast.LENGTH_SHORT).show();
 
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+    }
+
+    @Override
+    public void onDateChosen(Date date) {
+        String dateString;
+        String year;
+        String month;
+        String day;
+
+        Calendar cal;
+        cal = new GregorianCalendar();
+        cal.setTime(date);
+
+        year = String.valueOf(cal.get(Calendar.YEAR));
+        month = String.valueOf(cal.get(Calendar.MONTH)+1);
+        if (month.length() == 1) {
+            month = "0" + month;
+        }
+        day = String.valueOf(cal.get(Calendar.DAY_OF_MONTH));
+        if (day.length() == 1) {
+            day = "0" + day;
+        }
+
+        mSelectedDate = date;
+
+        dateString = year + month + day;
+
+        mChooseDateTV.setText(cal.get(Calendar.DAY_OF_WEEK) + ", " + month +" "+ day +" "+ year);
     }
 }
 
