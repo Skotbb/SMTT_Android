@@ -45,6 +45,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 public class FilterActivity extends AppCompatActivity
         implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
@@ -60,7 +61,7 @@ public class FilterActivity extends AppCompatActivity
     private final String DIALOGE_DATE = "DialogDate";
 
     private final int TRIPS_REQUEST_ID = 923;
-    private static final int REQUEST_DATE = 0;
+    private static final int REQUEST_FILTERED_TRIPS = 555;
 
     // create some global variables
     Context context;
@@ -118,7 +119,7 @@ public class FilterActivity extends AppCompatActivity
         mCalendar = new GregorianCalendar();
 
         mYear = String.valueOf(mCalendar.get(Calendar.YEAR));
-        mMonth = String.valueOf(mCalendar.get(Calendar.MONTH));
+        mMonth = String.valueOf(mCalendar.get(Calendar.MONTH) + 1);
         if (mMonth.length() == 1) {
             mMonth = "0" + mMonth;
         }
@@ -458,8 +459,82 @@ public class FilterActivity extends AppCompatActivity
             } catch (JSONException e) {
                 Log.d(ModelTestingActivity.class.toString(), e.getMessage());
             }
+        }
+
+        if (requestCode == REQUEST_FILTERED_TRIPS) {
+            Log.d(FilterActivity.class.toString(), jsonResult);
+
+            //Create a set for Routes that include port of departure
+            ModelManager.ScheduleManager mMySched = ModelManager.ScheduleManager.getInstance();
+            ModelManager.ScheduleFilter mMyFilter = ModelManager.getFilter();
+
+            List<Schedule> schedList = mMySched.getSchedules();
+            HashMap<String, FerryTrip> ferryTrips = new HashMap<>();
+
+            boolean podPresent = false,
+                    poaPresent = false;
+
+            try {
+                JSONArray jsArr = new JSONArray(jsonResult);
+
+                for (int i = 0; i < jsArr.length(); i++) {
+                    JSONObject obj = jsArr.getJSONObject(i);
+
+                    String hashKey = FerryTrip.getFerryTripId(obj);
+                    FerryTrip ft = ferryTrips.get(hashKey);
+                    if (ft == null) {
+                        // this is the first time we've seen this trip id in the list,
+                        // so create a new object.
+                        ft = new FerryTrip(obj);
+                        ft.addStopFromJSON(obj);
+                        ferryTrips.put(hashKey, ft);
+                    } else {
+                        // just add another stop to the already existing FerryTrip.
+                        ft.addStopFromJSON(obj);
+                    }
+
+//                    int id = Integer.parseInt(obj.getString("trip_id"));
+//                    String pod = mMyPortManager.getPortById(Integer.parseInt(obj.getString("stop_id"))).getFullLabel();
+//                    String poa = mMyPortManager.getPortById(Integer.parseInt(obj.getString("stop_id"))).getFullLabel();
+                    String pod = mMyFilter.getPod();
+                    String poa = mMyFilter.getPoa();
+                    String departTime = "";
+
+                    //For Each Ferry Trip
+                    for (Map.Entry<String, FerryTrip> trips : ferryTrips.entrySet()) {
+                        FerryTrip currTrip = trips.getValue();
+                        List<FerryTrip.FerryStop> stops = currTrip.getStops();
+                        //Check if trip includes departure and arrival
+                        for (FerryTrip.FerryStop curStop : stops) {
+                            if (curStop.getStopId().equals(pod)) {
+                                podPresent = true;
+                                departTime = curStop.getDepartureTime();
+                            }
+                            if (curStop.getStopId().equals(poa)) {
+                                poaPresent = true;
+                            }
+                        }
+                        //If trip includes the ports we're looking for, add to the schedule
+                        if (podPresent && poaPresent) {
+                            Calendar schedDate = GregorianCalendar.getInstance();
+                            schedDate.setTime(mMyFilter.getSearchDate());
+
+                            int hour = Integer.parseInt(departTime.substring(0, departTime.indexOf(":")));
+                            int minute = Integer.parseInt(departTime.substring(3, 5));
+                            schedDate.set(Calendar.HOUR, hour);
+                            schedDate.set(Calendar.MINUTE, minute);
+
+                            Schedule curr = new Schedule(Integer.parseInt(trips.getKey()), pod, poa, schedDate);
+                            schedList.add(curr);
+                        }
+                    }
 
 
+                }
+                ferryTrips.size();
+            } catch (JSONException e) {
+                Log.d(ModelTestingActivity.class.toString(), e.getMessage());
+            }
         }
 
     }
@@ -475,18 +550,26 @@ public class FilterActivity extends AppCompatActivity
                 Toast.makeText(FilterActivity.this, "Select a Port of Arrival", Toast.LENGTH_SHORT).show();
             } else {
                 String temp = arrivalSpinner.getSelectedItem().toString();
+                temp = mMyPortManager.getPortIdByLabel(temp);
                 Log.d("TESTIES", temp);
                 filter.setPoa(temp);
 
                 hasPOD = true;
             }
 
-            if(mSelectedDate == null){
+            if (mSelectedDate == null) {
                 Toast.makeText(FilterActivity.this, "Please select a date", Toast.LENGTH_SHORT).show();
-            }else {
+            } else {
                 String dateStuff = mChooseDateTV.getText().toString();
 
                 filter.setSearchDate(mSelectedDate);
+                dateStuff = dateStuff.substring(2);
+                dateStuff = dateStuff.replaceAll(" ", "");
+                String tempYear = dateStuff.substring(dateStuff.length() - 4, dateStuff.length());
+                String monthDay = dateStuff.substring(0, 4);
+                dateStuff = tempYear + monthDay;
+
+
                 filter.setDateString(dateStuff);
                 Log.d("TESTIES", dateStuff);
 
@@ -494,10 +577,22 @@ public class FilterActivity extends AppCompatActivity
             }
 
             String temp = departureSpinner.getSelectedItem().toString();
+            temp = mMyPortManager.getPortIdByLabel(temp);
             Log.d("TESTIES", temp);
             filter.setPod(temp);
 
 
+            Bundle filterData = new Bundle();
+            filterData.putString(ModelManager.QUERY_TRIP_DATE, filter.getDateString());
+            //filterData.putString(ModelManager.QUERY_TRIP_DEPART_PORT_ID,
+            //        filter.getPod());
+            //filterData.putString(ModelManager.QUERY_TRIP_ARRIVE_PORT_ID,
+            //        filter.getPoa());
+            mMgr.startQueryForResult(this, REQUEST_FILTERED_TRIPS,
+                    ModelManager.QueryType.TRIPS, filterData);
+
+            Intent intent = new Intent(getApplicationContext(), ScheduleActivity.class);
+            startActivity(intent);
 
         }
     }
@@ -580,7 +675,7 @@ public class FilterActivity extends AppCompatActivity
         cal.setTime(date);
 
         year = String.valueOf(cal.get(Calendar.YEAR));
-        month = String.valueOf(cal.get(Calendar.MONTH)+1);
+        month = String.valueOf(cal.get(Calendar.MONTH));
         if (month.length() == 1) {
             month = "0" + month;
         }
@@ -593,7 +688,7 @@ public class FilterActivity extends AppCompatActivity
 
         dateString = year + month + day;
 
-        mChooseDateTV.setText(cal.get(Calendar.DAY_OF_WEEK) + ", " + month +" "+ day +" "+ year);
+        mChooseDateTV.setText(cal.get(Calendar.DAY_OF_WEEK) + ", " + month + " " + day + " " + year);
     }
 }
 

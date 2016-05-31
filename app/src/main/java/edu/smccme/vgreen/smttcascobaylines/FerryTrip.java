@@ -6,6 +6,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by vgreen on 4/30/16.
@@ -17,9 +18,9 @@ import java.util.ArrayList;
 public class FerryTrip {
     private int m_tripId;
     //private int m_serviceId;
-    private String m_date; // change this to a Date if you like
-    private String m_routeId;
-    private String m_shapeId;
+    //private String mTime; // change this to a Date if you like
+    //private String m_routeId;
+    //private String m_shapeId;
     private ArrayList<FerryStop> m_stops;
 
     public static String getFerryTripId(JSONObject jsObj) throws JSONException {
@@ -33,10 +34,10 @@ public class FerryTrip {
     public FerryTrip(JSONObject jsObj) {
         try {
             m_tripId = Integer.parseInt(jsObj.getString("trip_id"));
-            m_routeId = jsObj.getString("route_id");
+            //m_routeId = jsObj.getString("route_id");
             //m_serviceId = Integer.parseInt(jsObj.getString("service_id"));
-            m_date = jsObj.getString("date");
-            m_shapeId = jsObj.getString("shape_id");
+            //mTime = jsObj.getString("departure_time");
+            //m_shapeId = jsObj.getString("shape_id");
         } catch(JSONException e) {
             Log.d(FerryTrip.class.toString(), e.getMessage());
         }
@@ -54,19 +55,23 @@ public class FerryTrip {
 
     }
 
-    public String getShapeId() {
-        return m_shapeId;
+    public List<FerryStop> getStops(){
+        return m_stops;
     }
+
+//    public String getShapeId() {
+//        return m_shapeId;
+//    }
 
 
 
     public class FerryStop {
-        private int m_stopId;
+        private String m_stopId;
         private String m_stopSequence;
         private String m_departureTime;
 
         public FerryStop(JSONObject jsObj) throws JSONException {
-            m_stopId = Integer.parseInt(jsObj.getString("stop_id"));
+            m_stopId = jsObj.getString("stop_id");
             m_stopSequence = jsObj.getString("stop_sequence");
             m_departureTime = jsObj.getString("departure_time");
         }
@@ -75,7 +80,7 @@ public class FerryTrip {
             return m_departureTime;
         }
 
-        public int getStopId() {
+        public String getStopId() {
             return m_stopId;
         }
 

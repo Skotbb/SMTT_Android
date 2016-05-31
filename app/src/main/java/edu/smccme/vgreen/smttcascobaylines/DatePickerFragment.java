@@ -71,7 +71,7 @@ public class DatePickerFragment extends DialogFragment{
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 int year = mDatePicker.getYear();
-                                int month = mDatePicker.getMonth();
+                                int month = mDatePicker.getMonth() + 1;
                                 int day = mDatePicker.getDayOfMonth();
                                 Date date = new GregorianCalendar(year, month, day).getTime();
                                 mMom.onDateChosen(date);

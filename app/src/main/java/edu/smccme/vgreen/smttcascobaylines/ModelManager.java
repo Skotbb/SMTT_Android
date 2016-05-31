@@ -154,9 +154,6 @@ public class ModelManager {
         }
     }
 
-
-
-
     // this should really be bundled into the QueryListener above,
     // but to make Jeremy's life easier, it will automatically update here instead.
 
@@ -613,12 +610,14 @@ public static class ScheduleManager{
     private ScheduleManager(){
         mSchedules = new ArrayList<>();
         Calendar cal = new GregorianCalendar();
-        mSchedules.add(new Schedule(1, "Portland", "Peak's Island", cal));
-        mSchedules.add(new Schedule(2, "Portland", "Great Diamond", cal));
-        mSchedules.add(new Schedule(3, "Portland", "Inner Bay", cal));
-        mSchedules.add(new Schedule(4, "Portland", "Douche Bay", cal));
-        mSchedules.add(new Schedule(5, "Portland", "Somewhere Else", cal));
-        mSchedules.add(new Schedule(6, "Portland", "Your Mom", cal));
+
+        //Testing
+//        mSchedules.add(new Schedule(1, "Portland", "Peak's Island", cal));
+//        mSchedules.add(new Schedule(2, "Portland", "Great Diamond", cal));
+//        mSchedules.add(new Schedule(3, "Portland", "Inner Bay", cal));
+//        mSchedules.add(new Schedule(4, "Portland", "Douche Bay", cal));
+//        mSchedules.add(new Schedule(5, "Portland", "Somewhere Else", cal));
+//        mSchedules.add(new Schedule(6, "Portland", "Your Mom", cal));
     }
 
     public static ScheduleManager getInstance(){
